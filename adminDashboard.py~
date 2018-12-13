@@ -125,7 +125,9 @@ def viewSummary():
 	lbl = Label(summary, text=str(tn/tn+fp))
 	lbl.grid(column=5, row=10, pady = (0,20))
 	summary.mainloop()
-		
+	
+def printClock(monitor):
+	
 def monitor():
 	monitor = Tk()
 	monitor.title('Current Network: 14.8 Hawk')
