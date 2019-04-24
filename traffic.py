@@ -25,7 +25,6 @@ def sendTraffic(count):
 	classif = -1
 	if dist1<dist2 and dist1<dist3 and dist1<dist4:
 		print("Classified into c1 (anomalous)")
-
 		classif = 1
 	elif dist2<dist3 and dist2<dist4:
 		print("Classified into c2 (anomalous)")

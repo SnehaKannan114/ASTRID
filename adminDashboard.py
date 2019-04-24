@@ -25,6 +25,7 @@ def draw():
 	btn = Button(window, text="MONITOR SYSTEM", command = monitor)
 	btn.grid(column=1, row=2)
 	window.mainloop()
+
 def runTests():
 	learning_thread = threading.Thread(target=distancePlots.startTraining)
 	learning_thread.start()
@@ -33,7 +34,11 @@ def runTests():
 	messagebox.showinfo('Notification', 'Finished.')
 	
 def runValidationData():
-	file2 = open(r'myLearnedData.pkl', 'rb')
+	try:
+		file2 = open(r'myLearnedData.pkl', 'rb')
+	except FileNotFoundError:
+		messagebox.showinfo('Notification', 'Run Training at least once')
+		return	
 	c1 = pickle.load(file2)
 	c2 = pickle.load(file2)
 	c3 = pickle.load(file2)
@@ -47,7 +52,11 @@ def runValidationData():
 	messagebox.showinfo('Notification', 'Finished Validation. View Summary')
 	
 def viewSummary():
-	file2 = open(r'run_Results_Log.pkl', 'rb')
+	try:
+		file2 = open(r'run_Results_Log.pkl', 'rb')
+	except FileNotFoundError:
+		messagebox.showinfo('Notification', 'Please validate at least once')
+		return
 	dateTime = pickle.load(file2)
 	correct = pickle.load(file2)
 	wrong = pickle.load(file2)
@@ -68,9 +77,9 @@ def viewSummary():
 	print("Number of classified instances:", total)
 	print("\n")
 	print("Accuracy (tp+tn/total):", correct/total)
-	print("Precision (tp/tp+fp):", tp/tp+fp)
-	print("Recall (tp/tp+fn):", tp/tp+fn)
-	print("Sensitivity (tp/tp+fn):", tn/tn+fp)
+	print("Precision (tp/tp+fp):", tp/(tp+fp))
+	print("Recall (tp/tp+fn):", tp/(tp+fn))
+	print("Specificity (tn/tn+fp):", tn/(tn+fp))
 	
 	
 	summary = Tk()
@@ -97,10 +106,6 @@ def viewSummary():
 	lbl = Label(summary, text=str(correct))
 	lbl.grid(column=5, row=3, pady = (0,20))
 
-	
-
-
-
 	lbl = Label(summary, text="Accuracy")
 	lbl.grid(column=0, row=6, pady = (20,5))
 
@@ -110,23 +115,28 @@ def viewSummary():
 	lbl = Label(summary, text="Precision")
 	lbl.grid(column=5, row=6, pady = (20,5))
 
-	lbl = Label(summary, text=str(tp/tp+fp))
+	lbl = Label(summary, text=str(tp/(tp+fp)))
 	lbl.grid(column=5, row=7, pady = (0,20))
 
 	lbl = Label(summary, text="Recall")
 	lbl.grid(column=0, row=9, pady = (20,5))
 
-	lbl = Label(summary, text=str(tp/tp+fn))
+	lbl = Label(summary, text=str(tp/(tp+fn)))
 	lbl.grid(column=0, row=10, pady = (0,20))
 	
-	lbl = Label(summary, text="Sensitivity")
+	lbl = Label(summary, text="Specificity")
 	lbl.grid(column=5, row=9, pady = (20,5))
 
-	lbl = Label(summary, text=str(tn/tn+fp))
+	lbl = Label(summary, text=str(tn/(tn+fp)))
 	lbl.grid(column=5, row=10, pady = (0,20))
 	summary.mainloop()
-		
+	
 def monitor():
+	try:
+		file2 = open(r'myLearnedData.pkl', 'rb')
+	except FileNotFoundError:
+		messagebox.showinfo('Notification', 'Run Training at least once')
+		return	
 	monitor = Tk()
 	monitor.title('Current Network: 14.8 Hawk')
 	monitor.geometry('600x400')
@@ -176,6 +186,3 @@ def monitor():
 		waitTime = random.randint(0, 10)	
 		time.sleep(waitTime)
 	monitor.mainloop()
-	
-	
-

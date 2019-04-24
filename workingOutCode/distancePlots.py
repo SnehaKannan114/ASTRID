@@ -17,7 +17,8 @@ import numpy as np
 from math import sqrt
 import pickle
 import datetime
-
+from makingClusterClass import Cluster
+from preProcessing import dataCleanup
 '''
 -----------------------
 Data cleanup Phase
@@ -35,67 +36,18 @@ norm:1
 
 Protocol
 HTTP/1.1: 0
+other: -1
+
+Pragma OR Cache-Control
+no-cache: 0
+other: -1
+
+Connection:
+close: 0
+keep-alive: 1
+other: -1
 ----------------------
 '''
-def dataCleanup(data):
-    
-    for i in range(len(data['method'].values)):
-        if data['method'].values[i] == "GET":
-            data['method'].values[i] = 0
-        elif data['method'].values[i] == "POST":
-            data['method'].values[i] = 1
-        elif data['method'].values[i] == "PUT":
-            data['method'].values[i] = 2
-        else:
-            data['method'].values[i] = -1
-
-    for i in range(len(data['label'].values)):
-        if data['label'].values[i] == "anom":
-            data['label'].values[i] = 0
-        elif data['label'].values[i] == "norm":
-            data['label'].values[i] = 1
-        else:
-            data['label'].values[i] = -1
-
-    for i in range(len(data['protocol'].values)):
-        if data['protocol'].values[i] == "HTTP/1.1":
-            data['protocol'].values[i] = 0
-        else:
-            data['protocol'].values[i] = -1
-
-    for i in range(len(data['pragma'].values)):
-        if data['pragma'].values[i] == "no-cache":
-            data['pragma'].values[i] = 0
-        else:
-            data['pragma'].values[i] = -1
-
-    for i in range(len(data['cacheControl'].values)):
-        if data['cacheControl'].values[i] == "no-cache":
-            data['cacheControl'].values[i] = 0
-        else:
-            data['cacheControl'].values[i] = -1
-
-
-    for i in range(len(data['connection'].values)):
-        if data['connection'].values[i] == "close":
-            data['connection'].values[i] = 0
-        if data['connection'].values[i] == "keep-alive":
-            data['connection'].values[i] = 1
-        else:
-            data['connection'].values[i] = -1
-
-    for i in range(len(data['contentLength'].values)):
-        if data['contentLength'].values[i] == "null":
-            data['contentLength'].values[i] = -100
-        else:
-            data['contentLength'].values[i] = int(data['contentLength'].values[i])
-        
-    for i in range(len(data['contentType'].values)):
-        if data['contentType'].values[i] == "null":
-            data['contentType'].values[i] = 0
-        else:
-            data['contentType'].values[i] = -1
-
 
 
 def jaccard_similarity(list1, list2):
@@ -260,7 +212,9 @@ def validateModel():
     fn = 0
     prettyPrintLine("Validating Model")
     for entry in data.values:
-        print(entry, c1)
+        
+        '''REMOVE COMMENT'''
+        #print(entry, c1)
         #input()
         dist1 = getDissimilarityDist(entry, c1)
         dist2 = getDissimilarityDist(entry, c2)
@@ -330,12 +284,15 @@ def startTraining():
     f1 = data['method'].values
     f2 = data['label'].values
     X = np.array(list(zip(f1, f2)))
-    numOfDataEntries = len(data.values)
+    numOfDataEntries = len(data.values) - 1000
+
 
     initCentroid1 = random.randint(0, numOfDataEntries//4-100)
     initCentroid2 = random.randint(numOfDataEntries//4, numOfDataEntries//2-100)
     initCentroid3 = random.randint(numOfDataEntries//2, 3*numOfDataEntries//4-100)
     initCentroid4 = random.randint(3*numOfDataEntries//4, numOfDataEntries)
+    initCentroid5 = random.randint(numOfDataEntries, numOfDataEntries+995)
+
 
     ##print(data.values[initCentroid1])
     ##print(data.values[initCentroid2])
@@ -343,50 +300,98 @@ def startTraining():
     ##print(data.values[initCentroid4])
     ##print(data.values[initCentroid5])
 
-    clusters = [[],[],[],[]]
+
+    clusters = [[],[],[],[],[]]
     clusters[0].append(data.values[initCentroid1])
     clusters[1].append(data.values[initCentroid2])
     clusters[2].append(data.values[initCentroid3])
     clusters[3].append(data.values[initCentroid4])
+    clusters[4].append(data.values[initCentroid5])
 
-    clustersConcise = [[],[],[],[]]
+    myCluster1 = Cluster(data.values[initCentroid1])
+    myCluster2 = Cluster(data.values[initCentroid2])
+    myCluster3 = Cluster(data.values[initCentroid3])
+    myCluster4 = Cluster(data.values[initCentroid4])
+    myCluster5 = Cluster(data.values[initCentroid5])
+    print(numOfDataEntries)
+    print(initCentroid5)
+    print(myCluster5.center)
+
+    clustersConcise = [[],[],[],[],[]]
     clustersConcise[0].append(data.values[initCentroid1])
     clustersConcise[1].append(data.values[initCentroid2])
     clustersConcise[2].append(data.values[initCentroid3])
     clustersConcise[3].append(data.values[initCentroid4])
+    clustersConcise[4].append(data.values[initCentroid5])
 
     #print(initCentroid1, initCentroid2, initCentroid3, initCentroid4)
     count = 0
     for entry in data.values:
         count = count+1
-        if(count%10 < 7):
+        if(count%10 < 6):
             continue
         #print(count)
-        dist1 = getDissimilarityDist(entry, data.values[initCentroid1])
+        dist1 = getDissimilarityDist(entry, myCluster1.center)
         #print("\n")
-        dist2 = getDissimilarityDist(entry, data.values[initCentroid2])
+        dist2 = getDissimilarityDist(entry, myCluster2.center)
         #print("\n")
-        dist3 = getDissimilarityDist(entry, data.values[initCentroid3])
+        dist3 = getDissimilarityDist(entry, myCluster3.center)
         #print("\n")
-        dist4 = getDissimilarityDist(entry, data.values[initCentroid4])
+        dist4 = getDissimilarityDist(entry, myCluster4.center)
+        #print("\n")
+        dist5 = getDissimilarityDist(entry, myCluster5.center)
         #print("\n")
         #print(dist1, dist2, dist3, dist4)
-        if dist1<dist2 and dist1<dist3 and dist1<dist4:
+        if dist1<dist2 and dist1<dist3 and dist1<dist4 and dist1<dist5:
             clusters[0].append(entry)
             clustersConcise[0].append(entry[17])
-        elif dist2<dist3 and dist2<dist4:
+            myCluster1.add(entry)
+        elif dist2<dist3 and dist2<dist4 and dist1<dist5:
             clusters[1].append(entry)
             clustersConcise[1].append(entry[17])
-        elif dist3<dist4:
+            myCluster2.add(entry)
+        elif dist3<dist4 and dist1<dist5:
             clusters[2].append(entry)
             clustersConcise[2].append(entry[17])
-        else:
+            myCluster3.add(entry)
+        elif(dist4<dist5):
             clusters[3].append(entry)
             clustersConcise[3].append(entry[17])
-
+            myCluster4.add(entry)
+        else:
+            clusters[4].append(entry)
+            clustersConcise[4].append(entry[17])
+            myCluster5.add(entry)
+    '''
+    prettyPrintLine("Cluster 1")
+    print(myCluster1.center)
+    myCluster1.printMeans()
+    prettyPrintLine("Cluster 2")
+    print(myCluster2.center)
+    myCluster2.printMeans()
+    prettyPrintLine("Cluster 3")
+    print(myCluster3.center)
+    myCluster3.printMeans()
+    prettyPrintLine("Cluster 4")
+    print(myCluster4.center)
+    myCluster4.printMeans()
+    prettyPrintLine("Cluster 5")
+    print(myCluster5.center)
+    myCluster5.printMeans()
+    '''
         #to recompute means
-        for i in range(4):
-            new_centers = np.array(X.mean(0))
+    for i in range(4):
+        new_centers = np.array(X.mean(0))
+    afile = open(r'myLearnedData.pkl', 'wb')
+    pickle.dump(data.values[initCentroid1], afile)
+    pickle.dump(data.values[initCentroid2], afile)
+    pickle.dump(data.values[initCentroid3], afile)
+    pickle.dump(data.values[initCentroid4], afile)
+    pickle.dump(data.values[initCentroid5], afile)
+    
+    #pickle.dump(clusters, afile)
+    afile.close()
+
 
     print("\nCentroids\n")
     print(data.values[initCentroid1], data.values[initCentroid2], data.values[initCentroid3], data.values[initCentroid4])
@@ -401,11 +406,10 @@ def startTraining():
     print("\n\n")
     print("Cluster 4: Labels classified")
     print(clustersConcise[3])
+    print("\n\n")
+    print("Cluster 5: Labels classified")
+    print(clustersConcise[4])
 
-    afile = open(r'myLearnedData.pkl', 'wb')
-    pickle.dump(data.values[initCentroid1], afile)
-    pickle.dump(data.values[initCentroid2], afile)
-    pickle.dump(data.values[initCentroid3], afile)
-    pickle.dump(data.values[initCentroid4], afile)
-    #pickle.dump(clusters, afile)
-    afile.close()
+
+    
+startTraining()
